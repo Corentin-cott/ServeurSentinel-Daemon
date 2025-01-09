@@ -14,9 +14,9 @@ A linux Deamon made for managing tmux server sessions and player server data. St
 
 ## Functionalities
 
+Main functionalities :
 - Get and store server player data in database
-- Read [tmux](https://doc.ubuntu-fr.org/tmux) terminals to listen to server consoles
-  -> Do stuff when certain things appear in server console (Sent message with a bot, extract and store data, ect...)
+- Read [tmux](https://doc.ubuntu-fr.org/tmux) terminals to listen to server consoles<br>**->** Do stuff when certain things appear in server console *(Sent message with a bot, extract and store data, ect...)*
 
 ## How to install
 
