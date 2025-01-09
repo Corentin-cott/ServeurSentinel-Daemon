@@ -17,7 +17,7 @@ For performance reasons, the Daemon doesn't read the terminal directly, but the 
 
 Main functionalities :
 - Get and store server player data in database
-- Read [tmux](https://doc.ubuntu-fr.org/tmux) terminals to listen to server consoles<br>**->** Do stuff when certain things appear in server console *(Sent message with a bot, extract and store data, ect...)*
+- Read logs of [tmux](https://doc.ubuntu-fr.org/tmux) game server sessions to listen to server consoles<br>**->** Do stuff when certain things appear in server console *(Sent message with a bot, extract and store data, ect...)*
 
 ## How to install
 
