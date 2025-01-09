@@ -10,7 +10,8 @@
 
 ## Description
 
-A linux Deamon made for managing tmux server sessions and player server data. Storing player connections and game data, while also reading servers terminals for triggers. 
+A linux Deamon made for managing tmux server sessions and player server data. Storing player connections and game data, while also reading "servers terminals" for triggers.
+For performance reasons, the Daemon doesn't read the terminal directly, but the logs the tmux session creates. The daemon then read the file each 1 second (this can be changed in the config).
 
 ## Functionalities
 
