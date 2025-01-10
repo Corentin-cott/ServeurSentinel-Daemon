@@ -1,1 +1,1 @@
-# serversentinel file
+# serversentinel daemon
