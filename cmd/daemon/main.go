@@ -7,39 +7,43 @@ import (
 	"sync"
 
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
+	"github.com/Corentin-cott/ServeurSentinel/internal/triggers"
 )
 
 func main() {
-	logDirPath := "/opt/serversentinel/serverslog/" // Répertoire contenant les fichiers .log
+	logDirPath := "/opt/serversentinel/serverslog/" // Dossier contenant les fichiers log des serveurs
 
-	fmt.Println("Démarrage du daemon Server Sentinel...")
+	fmt.Println("Starting the Server Sentinel daemon...")
 
-	// Récupérer tous les fichiers .log dans le répertoire
+	// Récupére tous les fichiers .log du dossier
 	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))
 	if err != nil {
-		log.Fatalf("Erreur lors de la recherche des fichiers log : %v", err)
+		log.Fatalf("Error searching for log files: %v", err)
 	}
 
 	if len(logFiles) == 0 {
-		log.Println("Aucun fichier log trouvé dans le répertoire.")
+		log.Println("No log files found in the directory.")
 		return
 	}
 
+	// Crée la liste des triggers
+	triggersList := triggers.GetTriggers()
+
 	var wg sync.WaitGroup
 
-	// Lancer un écouteur pour chaque fichier log
+	// Commence un écouteur pour chaque fichier log
 	for _, logFile := range logFiles {
 		wg.Add(1)
 		go func(file string) {
 			defer wg.Done()
-			err := console.StartFileLogListener(file, console.ExampleAction)
+			err := console.StartFileLogListener(file, triggersList)
 			if err != nil {
-				log.Printf("Erreur pour le fichier %s : %v\n", file, err)
+				log.Printf("Error with file %s: %v\n", file, err)
 			}
 		}(logFile)
 	}
 
-	// Attendre que tous les écouteurs soient terminés
+	// Attend que tous les écouteurs soient terminés
 	wg.Wait()
-	fmt.Println("Arrêt du daemon Server Sentinel.")
+	fmt.Println("Server Sentinel daemon stopped.")
 }
