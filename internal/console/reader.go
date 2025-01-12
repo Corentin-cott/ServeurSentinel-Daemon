@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-
-	// "regexp"
 	"strings"
 	"time"
 )
@@ -51,19 +49,4 @@ func StartFileLogListener(logFilePath string, triggers []Trigger) error {
 			}
 		}
 	}
-}
-
-// Écrit une ligne dans un fichier log
-func WriteToLogFile(logPath, line string) error {
-	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("erreur d'ouverture du fichier log : %v", err)
-	}
-	defer file.Close()
-
-	_, err = file.WriteString(line + "\n")
-	if err != nil {
-		return fmt.Errorf("erreur d'écriture dans le fichier log : %v", err)
-	}
-	return nil
 }
