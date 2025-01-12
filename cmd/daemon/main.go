@@ -3,18 +3,43 @@ package main
 import (
 	"fmt"
 	"log"
+	"path/filepath"
+	"sync"
 
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
 )
 
 func main() {
-	logFilePath := "/opt/serversentinel/serverslog/primaire.log"
+	logDirPath := "/opt/serversentinel/serverslog/" // Répertoire contenant les fichiers .log
 
 	fmt.Println("Démarrage du daemon Server Sentinel...")
 
-	// Démarrer l'écoute des logs avec le trigger ExampleAction
-	err := console.StartFileLogListener(logFilePath, console.ExampleAction)
+	// Récupérer tous les fichiers .log dans le répertoire
+	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))
 	if err != nil {
-		log.Fatalf("Erreur lors du lancement de l'écoute des logs : %v", err)
+		log.Fatalf("Erreur lors de la recherche des fichiers log : %v", err)
 	}
+
+	if len(logFiles) == 0 {
+		log.Println("Aucun fichier log trouvé dans le répertoire.")
+		return
+	}
+
+	var wg sync.WaitGroup
+
+	// Lancer un écouteur pour chaque fichier log
+	for _, logFile := range logFiles {
+		wg.Add(1)
+		go func(file string) {
+			defer wg.Done()
+			err := console.StartFileLogListener(file, console.ExampleAction)
+			if err != nil {
+				log.Printf("Erreur pour le fichier %s : %v\n", file, err)
+			}
+		}(logFile)
+	}
+
+	// Attendre que tous les écouteurs soient terminés
+	wg.Wait()
+	fmt.Println("Arrêt du daemon Server Sentinel.")
 }
