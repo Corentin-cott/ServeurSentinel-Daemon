@@ -31,6 +31,9 @@ func main() {
 
 	var wg sync.WaitGroup
 
+	// Message de test à envoyer sur Discord
+	// triggers.SendToDiscord("Hi i'm sending this message from the Server Sentinel daemon !")
+
 	// Commence un écouteur pour chaque fichier log
 	for _, logFile := range logFiles {
 		wg.Add(1)

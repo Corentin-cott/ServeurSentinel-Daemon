@@ -89,8 +89,21 @@ func WriteToLogFile(logPath, line string) error {
 
 // Envoi un message à un serveur Discord
 func SendToDiscord(message string) {
+	config.LoadConfig("/opt/serversentinel/config.json")
 	botToken := config.AppConfig.BotToken
 	channelID := config.AppConfig.DiscordChannelID
+
+	switch {
+	case botToken == "" && channelID == "":
+		fmt.Println("Bot token and channel ID not set. Skipping Discord message.")
+		return
+	case botToken == "":
+		fmt.Println("Bot token not set. Skipping Discord message.")
+		return
+	case channelID == "":
+		fmt.Println("Channel ID not set. Skipping Discord message.")
+		return
+	}
 
 	apiURL := fmt.Sprintf("https://discord.com/api/v10/channels/%s/messages", channelID)
 
