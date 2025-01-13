@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/Corentin-cott/ServeurSentinel/config"
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
+	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 	"github.com/Corentin-cott/ServeurSentinel/internal/triggers"
 )
 
@@ -14,6 +16,18 @@ func main() {
 	logDirPath := "/opt/serversentinel/serverslog/" // Dossier contenant les fichiers log des serveurs
 
 	fmt.Println("Starting the Server Sentinel daemon...")
+
+	// Charger la configuration
+	err := config.LoadConfig("/opt/serversentinel/config.json")
+	if err != nil {
+		log.Fatalf("Erreur lors du chargement de la configuration : %v", err)
+	}
+
+	// Initialiser la connexion à la base de données
+	err = db.ConnectToDatabase()
+	if err != nil {
+		log.Fatalf("Erreur lors de la connexion à la base de données : %v", err)
+	}
 
 	// Récupére tous les fichiers .log du dossier
 	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))

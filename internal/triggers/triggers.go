@@ -11,6 +11,7 @@ import (
 
 	"github.com/Corentin-cott/ServeurSentinel/config"
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
+	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 )
 
 // ----------------- Start of global variables -----------------
@@ -36,7 +37,8 @@ func GetTriggers() []console.Trigger {
 					return
 				}
 				fmt.Println("Player joined: ", matches[2])
-				SendToDiscord("Player joined: " + matches[2])
+				SendToDiscord(matches[2] + " à rejoint le serveur")
+				PlayerJoinAction(line)
 				WriteToLogFile("/var/log/serversentinel/playerjoined.log", matches[2])
 			},
 		},
@@ -52,7 +54,7 @@ func GetTriggers() []console.Trigger {
 					return
 				}
 				fmt.Println("Player disconnected: ", matches[2])
-				SendToDiscord("Player disconnected: " + matches[2])
+				SendToDiscord(matches[2] + " à quitté le serveur")
 				WriteToLogFile("/var/log/serversentinel/playerdisconnected.log", matches[2])
 			},
 		},
@@ -89,7 +91,6 @@ func WriteToLogFile(logPath, line string) error {
 
 // Envoi un message à un serveur Discord
 func SendToDiscord(message string) {
-	config.LoadConfig("/opt/serversentinel/config.json")
 	botToken := config.AppConfig.BotToken
 	channelID := config.AppConfig.DiscordChannelID
 
@@ -139,5 +140,27 @@ func SendToDiscord(message string) {
 		fmt.Printf("Erreur lors de l'envoi à Discord : Status %d\n", resp.StatusCode)
 	} else {
 		fmt.Println("Message envoyé à Discord avec succès.")
+	}
+}
+
+func PlayerJoinAction(line string) {
+	// Extraire les informations du joueur
+	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
+	matches := re.FindStringSubmatch(line)
+	if len(matches) < 3 {
+		fmt.Println("Erreur lors de l'extraction des informations de connexion")
+		return
+	}
+
+	playerUUID := matches[2] // Le UUID du joueur est le deuxième groupe
+	fmt.Printf("Le joueur %s s'est connecté\n", playerUUID)
+
+	// Utilisez la nouvelle fonction pour vérifier et enregistrer le joueur
+	serverID := 1 // Vous pouvez utiliser l'ID de votre serveur ici
+
+	// Enregistrer la connexion
+	err := db.SaveConnectionLog(playerUUID, serverID)
+	if err != nil {
+		fmt.Printf("Erreur lors de l'enregistrement du log de connexion : %v\n", err)
 	}
 }
