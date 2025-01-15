@@ -1,5 +1,7 @@
 # Server Sentinel
 
+tmux new-session -s ${id}_${nom_serv} 'java -Xmx1024M -Xms1024M -jar server.jar nogui 2>&1 || tee /opt/serversentinel/serverslog/${id}.log'
+
 ## Table of Contents
 
 - [Description](#Goals)

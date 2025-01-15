@@ -36,7 +36,7 @@ func GetTriggers() []console.Trigger {
 					fmt.Println("Erreur lors de la récupération du nom du joueur")
 					return
 				}
-				fmt.Println("Player joined: ", matches[2])
+				// fmt.Println(matches[2] + " à rejoint le serveur")
 				SendToDiscord(matches[2] + " à rejoint le serveur")
 				PlayerJoinAction(line)
 				WriteToLogFile("/var/log/serversentinel/playerjoined.log", matches[2])
@@ -53,7 +53,7 @@ func GetTriggers() []console.Trigger {
 					fmt.Println("Erreur lors de la récupération du nom du joueur")
 					return
 				}
-				fmt.Println("Player disconnected: ", matches[2])
+				// fmt.Println(matches[2] + " à quitté le serveur")
 				SendToDiscord(matches[2] + " à quitté le serveur")
 				WriteToLogFile("/var/log/serversentinel/playerdisconnected.log", matches[2])
 			},
@@ -91,6 +91,8 @@ func WriteToLogFile(logPath, line string) error {
 
 // Envoi un message à un serveur Discord
 func SendToDiscord(message string) {
+	return // Désactiver l'envoi de message Discord pour le moment
+
 	botToken := config.AppConfig.BotToken
 	channelID := config.AppConfig.DiscordChannelID
 
@@ -152,14 +154,13 @@ func PlayerJoinAction(line string) {
 		return
 	}
 
-	playerUUID := matches[2] // Le UUID du joueur est le deuxième groupe
-	fmt.Printf("Le joueur %s s'est connecté\n", playerUUID)
+	playerName := matches[2] // Le UUID du joueur est le deuxième groupe
 
 	// Utilisez la nouvelle fonction pour vérifier et enregistrer le joueur
 	serverID := 1 // Vous pouvez utiliser l'ID de votre serveur ici
 
 	// Enregistrer la connexion
-	err := db.SaveConnectionLog(playerUUID, serverID)
+	err := db.SaveConnectionLog(playerName, serverID)
 	if err != nil {
 		fmt.Printf("Erreur lors de l'enregistrement du log de connexion : %v\n", err)
 	}

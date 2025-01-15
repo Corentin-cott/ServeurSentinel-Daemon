@@ -1,2 +1,2 @@
 If you use tmux, you can use the following command to save the log to a file:
-tmux new-session -s [your session name] '[command to start your server] | tee /opt/serversentinel/serverslog/[whatever you want].log'
+tmux new-session -s [your session name] '[command to start your server] | tee /opt/serversentinel/serverslog/[id of the server].log'
