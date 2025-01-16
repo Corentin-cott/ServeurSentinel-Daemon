@@ -13,6 +13,7 @@ var db *sql.DB
 
 // ConnectToDatabase initialises the connection to the MySQL database
 func ConnectToDatabase() error {
+	// Load the database configuration
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 		config.AppConfig.DB.User,
 		config.AppConfig.DB.Password,
@@ -24,74 +25,33 @@ func ConnectToDatabase() error {
 	var err error
 	db, err = sql.Open("mysql", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to open database connection: %v", err)
+		return fmt.Errorf("ERROR OPENING DATABASE: %v", err)
 	}
 
-	// Verifier la connexion
+	// Test the connection
 	if err := db.Ping(); err != nil {
-		return fmt.Errorf("failed to connect to the database: %v", err)
+		return fmt.Errorf("ERROR WHILE PINGING DATABASE: %v", err)
 	}
 
 	fmt.Println("Successfully connected to the database.")
 	return nil
 }
 
-// CheckAndInsertPlayer vérifie si un joueur existe, sinon il l'ajoute
-func CheckAndInsertPlayer(playerName string, serverID int) (int, error) {
-	// Utilisation du service pour récupérer l'UUID du joueur
-	jeu, err := GetServerGameById(serverID)
-	if err != nil {
-		return -1, fmt.Errorf("FAILED TO GET SERVER GAME: %v", err)
-	}
-
-	playerAcountID, err := GetPlayerAccountIdByPlayerName(playerName, jeu)
-	if err != nil {
-		return -1, fmt.Errorf("FAILED TO GET PLAYER ACCOUNT ID: %v", err)
-	}
-
-	// Vérifier si le joueur existe déjà en utilisant GetPlayerIdByAccoundId(accountId string)
-	fmt.Println("Checking if player exists...")
-	playerID, _ := GetPlayerIdByAccountId(playerAcountID)
-	if playerID != -1 {
-		fmt.Printf("PLAYER WITH ACCOUNT ID %s ALREADY EXISTS\n", playerAcountID)
-		return playerID, nil
-	}
-
-	// Si le joueur n'existe pas, ajouter un nouveau joueur dans la table joueurs avec serveur_id = 1 [DEBUG]
-	fmt.Println("Player does not exist. Inserting new player...")
-	insertQuery := "INSERT INTO joueurs (utilisateur_id, jeu, compte_id, premiere_co, derniere_co) VALUES (NULL, ?, ?, NOW(), NOW())"
-	_, err = db.Exec(insertQuery, "Minecraft", playerAcountID)
-	if err != nil {
-		return -1, fmt.Errorf("FAILED TO INSERT PLAYER: %v", err)
-	}
-	fmt.Println("Player successfully inserted !")
-
-	// Récupérer l'id du joueur nouvellement inséré
-	playerID, err = GetPlayerIdByAccountId(playerAcountID)
-	if err != nil {
-		return -1, fmt.Errorf("FAILED TO GET PLAYER ID: %v", err)
-	} else if playerID == -1 {
-		return -1, fmt.Errorf("PLAYER ID NOT FOUND")
-	}
-
-	return playerID, nil
-}
-
-// SaveConnectionLog sauvegarde un log de connexion dans la base de données
+// SaveConnectionLog saves a connection log for a player
 func SaveConnectionLog(playerName string, serverID int) error {
-	// Vérifier si le joueur existe, sinon l'ajouter
+	// Check if the player exists and insert it if it doesn't
 	_, err := CheckAndInsertPlayer(playerName, serverID)
 	if err != nil {
 		return fmt.Errorf("FAILED TO CHECK OR INSERT PLAYER: %v", err)
 	}
 
-	// Récupérer l'id de compte du joueur à partir de son pseudonyme
+	// Get player account ID with the player name
 	playerAcountID, err := GetPlayerAccountIdByPlayerName(playerName, "Minecraft")
 	if err != nil {
 		return fmt.Errorf("FAILED TO GET PLAYER ACCOUNT ID: %v", err)
 	}
 
-	// Récupérer l'id du joueur à partir de son id de compte
+	// Get player ID with the player account ID
 	playerID, err := GetPlayerIdByAccountId(playerAcountID)
 	if err != nil {
 		return fmt.Errorf("FAILED TO GET PLAYER ID: %v", err)
@@ -99,13 +59,13 @@ func SaveConnectionLog(playerName string, serverID int) error {
 		return fmt.Errorf("PLAYER ID NOT FOUND")
 	}
 
-	// Mettre à jour la date de dernière connexion du joueur
+	// Update the last connection date of the player
 	err = UpdatePlayerLastConnection(playerID)
 	if err != nil {
 		return fmt.Errorf("FAILED TO UPDATE LAST CONNECTION: %v", err)
 	}
 
-	// Enregistrer le log de connexion
+	// Insert log in the database
 	insertQuery := `INSERT INTO joueurs_connections_log (serveur_id, joueur_id, date) VALUES (?, ?, NOW())`
 	fmt.Println("Inserting connection log for player", playerID)
 	_, err = db.Exec(insertQuery, serverID, playerID)
@@ -117,19 +77,70 @@ func SaveConnectionLog(playerName string, serverID int) error {
 	return nil
 }
 
-// Getter pour récupéré l'id d'un joueur à partir de son id de compte. UUID pour les joueurs Minecraft, par exemple.
+// CheckAndInsertPlayer checks if a player exists in the database and inserts it if it doesn't
+func CheckAndInsertPlayer(playerName string, serverID int) (int, error) {
+	// Get server game
+	jeu, err := GetServerGameById(serverID)
+	if err != nil {
+		return -1, fmt.Errorf("FAILED TO GET SERVER GAME: %v", err)
+	}
+
+	// Get player account ID
+	playerAcountID, err := GetPlayerAccountIdByPlayerName(playerName, jeu)
+	if err != nil {
+		return -1, fmt.Errorf("FAILED TO GET PLAYER ACCOUNT ID: %v", err)
+	}
+
+	// Check if the player already exists
+	fmt.Println("Checking if player exists...")
+	playerID, _ := GetPlayerIdByAccountId(playerAcountID)
+	if playerID != -1 {
+		fmt.Printf("Player already exists with ID (this is not a problem) %d\n", playerID)
+		return playerID, nil // Player already exists, return its ID
+	}
+
+	// If the player does not exist, insert it
+	fmt.Println("Player does not exist. Inserting new player...")
+	insertQuery := "INSERT INTO joueurs (utilisateur_id, jeu, compte_id, premiere_co, derniere_co) VALUES (NULL, ?, ?, NOW(), NOW())"
+	_, err = db.Exec(insertQuery, jeu, playerAcountID)
+	if err != nil {
+		return -1, fmt.Errorf("FAILED TO INSERT PLAYER: %v", err)
+	}
+	fmt.Println("Player successfully inserted !")
+
+	// Return the player ID of the newly inserted player
+	playerID, err = GetPlayerIdByAccountId(playerAcountID)
+	if err != nil {
+		return -1, fmt.Errorf("FAILED TO GET PLAYER ID: %v", err)
+	} else if playerID == -1 {
+		return -1, fmt.Errorf("PLAYER ID NOT FOUND")
+	}
+
+	return playerID, nil
+}
+
+// UpdatePlayerLastConnection updates the last connection date of a player
+func UpdatePlayerLastConnection(playerID int) error {
+	fmt.Println("Updating last connection for player ID", playerID)
+	updateQuery := "UPDATE joueurs SET derniere_co = NOW() WHERE id = ?"
+	_, err := db.Exec(updateQuery, playerID)
+	if err != nil {
+		return fmt.Errorf("FAILED TO UPDATE LAST CONNECTION: %v", err)
+	}
+
+	return nil
+}
+
+// Getter to get the player ID by the account ID
 func GetPlayerIdByAccountId(accountId any) (int, error) {
-	fmt.Println("Getting player ID by account ID " + fmt.Sprintf("%v", accountId) + "...")
 	query := "SELECT id FROM joueurs WHERE compte_id = ?"
 	var playerID int
 
-	// Exécuter la requête et scanner le résultat dans la variable userId
 	err := db.QueryRow(query, accountId).Scan(&playerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return -1, nil
 		}
-		// Toute autre erreur
 		fmt.Println("FAILED TO GET PLAYER ID:", err)
 		return -1, fmt.Errorf("FAILED TO GET PLAYER ID: %v", err)
 	}
@@ -139,20 +150,8 @@ func GetPlayerIdByAccountId(accountId any) (int, error) {
 	return playerID, nil
 }
 
-func UpdatePlayerLastConnection(playerID int) error {
-	fmt.Println("Updating last connection for player ID", playerID)
-	updateQuery := "UPDATE joueurs SET derniere_co = NOW() WHERE id = ?"
-	_, err := db.Exec(updateQuery, playerID)
-	if err != nil {
-		return fmt.Errorf("FAILED TO UPDATE LAST CONNECTION: %v", err)
-	}
-
-	fmt.Println("Last connection updated successfully.")
-	return nil
-}
-
+// Getter to get the player account ID by the player name
 func GetPlayerAccountIdByPlayerName(playerName string, jeu string) (string, error) {
-	fmt.Println(`Getting player account ID for "` + playerName + `" on game "` + jeu + `" ...`)
 	if jeu == "" {
 		return "", fmt.Errorf("GAME NOT FOUND")
 	}
@@ -165,8 +164,8 @@ func GetPlayerAccountIdByPlayerName(playerName string, jeu string) (string, erro
 	}
 }
 
+// Getter to get the server game by the server ID
 func GetServerGameById(serverID int) (string, error) {
-	fmt.Println("Getting server game by ID " + fmt.Sprintf("%d", serverID) + "...")
 	query := "SELECT jeu FROM serveurs WHERE id = ?"
 	var jeu string
 
@@ -178,6 +177,5 @@ func GetServerGameById(serverID int) (string, error) {
 		return "", fmt.Errorf("FAILED TO GET SERVER GAME: %v", err)
 	}
 
-	fmt.Println("Server game retrieved successfully: " + jeu)
 	return jeu, nil
 }

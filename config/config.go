@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// DatabaseConfig is a struct that contains the configuration for the database
 type DatabaseConfig struct {
 	Host     string `json:"host"`
 	Port     int    `json:"port"`
@@ -14,11 +15,17 @@ type DatabaseConfig struct {
 	Name     string `json:"name"`
 }
 
+// BotConfig is a struct that contains the configuration for the bot
+type BotConfig struct {
+	BotToken         string `json:"botToken"`
+	DiscordChannelID string `json:"discordChannelID"`
+}
+
+// Config is a struct that contains every configuration needed for ServeurSentinel
 type Config struct {
-	BotToken         string         `json:"botToken"`
-	LogPath          string         `json:"logPath"`
-	DiscordChannelID string         `json:"discordChannelID"`
-	DB               DatabaseConfig `json:"db"`
+	Bot     BotConfig      `json:"bot"`
+	DB      DatabaseConfig `json:"db"`
+	LogPath string         `json:"logPath"`
 }
 
 var AppConfig Config
@@ -31,6 +38,7 @@ func LoadConfig(configPath string) error {
 	}
 	defer file.Close()
 
+	// Décode le fichier JSON dans la structure AppConfig
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&AppConfig); err != nil {
 		return fmt.Errorf("error decoding configuration: %v", err)
