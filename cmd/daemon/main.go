@@ -6,35 +6,63 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/Corentin-cott/ServeurSentinel/config"
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
+	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 	"github.com/Corentin-cott/ServeurSentinel/internal/triggers"
 )
 
 func main() {
-	logDirPath := "/opt/serversentinel/serverslog/" // Dossier contenant les fichiers log des serveurs
 
 	fmt.Println("Starting the Server Sentinel daemon...")
 
-	// Récupére tous les fichiers .log du dossier
+	// Load the configuration file
+	err := config.LoadConfig("/opt/serversentinel/config.json")
+	if err != nil {
+		log.Fatalf("FATAL ERROR LOADING CONFIG JSON FILE: %v", err)
+	}
+
+	// Initialize the connection to the database
+	err = db.ConnectToDatabase()
+	if err != nil {
+		log.Fatalf("FATAL ERROR TESTING DATABASE CONNECTION: %v", err)
+	}
+
+	// Get the list of all the log files
+	logDirPath := "/opt/serversentinel/serverslog/" // Folder containing the log files
 	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))
 	if err != nil {
-		log.Fatalf("Error searching for log files: %v", err)
+		log.Fatalf("FATAL ERROR WHEN GETTING LOG FILES: %v", err)
 	}
 
 	if len(logFiles) == 0 {
-		log.Println("No log files found in the directory.")
+		log.Println("No log files found in the directory, did you forget to redirect the logs to the folder ?")
 		return
 	}
 
-	// Crée la liste des triggers
+	// Create a list of triggers and create a wait group
 	triggersList := triggers.GetTriggers()
+	processLogFiles(logDirPath, triggersList)
 
+	fmt.Println("Server Sentinel daemon stopped.")
+}
+
+// Function to process all log files in a directory
+func processLogFiles(logDirPath string, triggersList []console.Trigger) {
+	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))
+	if err != nil {
+		log.Fatalf("FATAL ERROR WHEN GETTING LOG FILES: %v", err)
+	}
+
+	if len(logFiles) == 0 {
+		log.Println("No log files found in the directory, did you forget to redirect the logs to the folder?")
+		return
+	}
+
+	// Create a wait group
 	var wg sync.WaitGroup
 
-	// Message de test à envoyer sur Discord
-	// triggers.SendToDiscord("Hi i'm sending this message from the Server Sentinel daemon !")
-
-	// Commence un écouteur pour chaque fichier log
+	// Start a goroutine for each log file
 	for _, logFile := range logFiles {
 		wg.Add(1)
 		go func(file string) {
@@ -46,7 +74,6 @@ func main() {
 		}(logFile)
 	}
 
-	// Attend que tous les écouteurs soient terminés
+	// Wait for all goroutines to finish
 	wg.Wait()
-	fmt.Println("Server Sentinel daemon stopped.")
 }
