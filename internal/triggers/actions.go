@@ -31,6 +31,27 @@ func WriteToLogFile(logPath, line string) error {
 	return nil
 }
 
+// PlayerJoinAction logs the player's connection
+func PlayerJoinAction(line string) error {
+	// Extract the player's name from the line
+	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
+	matches := re.FindStringSubmatch(line)
+	if len(matches) < 3 {
+		return fmt.Errorf("ERRROR WHILE EXTRACTING CONNECTION INFO")
+	}
+
+	playerName := matches[2] // Get the player's name from the regex match
+
+	serverID := 1 // Temporary server ID, will be replaced by the real server ID later
+
+	// Save the connection log to the database
+	err := db.SaveConnectionLog(playerName, serverID)
+	if err != nil {
+		return fmt.Errorf("ERROR WHILE SAVING CONNECTION LOG: %v", err)
+	}
+	return nil
+}
+
 // SendToDiscord sends a message to a Discord channel
 func SendToDiscord(message string) error {
 	// Get parameters from the configuration
@@ -87,25 +108,4 @@ func SendToDiscord(message string) error {
 	} else {
 		return nil
 	}
-}
-
-// PlayerJoinAction logs the player's connection
-func PlayerJoinAction(line string) error {
-	// Extract the player's name from the line
-	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
-	matches := re.FindStringSubmatch(line)
-	if len(matches) < 3 {
-		return fmt.Errorf("ERRROR WHILE EXTRACTING CONNECTION INFO")
-	}
-
-	playerName := matches[2] // Get the player's name from the regex match
-
-	serverID := 1 // Temporary server ID, will be replaced by the real server ID later
-
-	// Save the connection log to the database
-	err := db.SaveConnectionLog(playerName, serverID)
-	if err != nil {
-		return fmt.Errorf("ERROR WHILE SAVING CONNECTION LOG: %v", err)
-	}
-	return nil
 }

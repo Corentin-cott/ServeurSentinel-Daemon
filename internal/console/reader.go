@@ -11,8 +11,9 @@ import (
 
 // Trigger is a struct that represents a trigger
 type Trigger struct {
-	Condition func(string) bool // Condition du trigger
-	Action    func(string)      // Function à exécuter si la condition est vraie
+	Name      string            // Trigger name
+	Condition func(string) bool // Condition of the trigger
+	Action    func(string)      // Function to execute when the condition is met
 }
 
 // StartFileLogListener starts listening to a log file in real time
