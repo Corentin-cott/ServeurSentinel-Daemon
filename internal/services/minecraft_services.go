@@ -7,8 +7,8 @@ import (
 	"net/http"
 )
 
-func GetPlayerUUID(playerName string) (string, error) {
-	fmt.Println("\nGetting player UUID for " + playerName + " from Mojang API...")
+func GetMinecraftPlayerUUID(playerName string) (string, error) {
+	fmt.Println("\nGetting Minecraft player UUID for player " + playerName + "...")
 	mojangAPIUrl := "https://api.mojang.com/users/profiles/minecraft/" + playerName
 	resp, err := http.Get(mojangAPIUrl)
 	if err != nil {
