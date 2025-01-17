@@ -8,12 +8,6 @@ import (
 	"github.com/Corentin-cott/ServeurSentinel/internal/console"
 )
 
-// Variables to store the regex patterns
-var (
-	playerJoinedRegex       = regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (.+) joined the game`)
-	playerDisconnectedRegex = regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (.+) lost connection: Disconnected`)
-)
-
 // GetTriggers returns the list of triggers filtered by names
 func GetTriggers(selectedTriggers []string) []console.Trigger {
 	// All available triggers
@@ -37,13 +31,13 @@ func GetTriggers(selectedTriggers []string) []console.Trigger {
 				return strings.Contains(line, "joined the game")
 			},
 			Action: func(line string) {
+				playerJoinedRegex := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (.+) joined the game`)
 				matches := playerJoinedRegex.FindStringSubmatch(line)
 				if len(matches) < 3 {
 					fmt.Println("ERROR WHILE EXTRACTING JOINED PLAYER NAME")
 					return
 				}
 				SendToDiscord(matches[2] + " à rejoint le serveur")
-				PlayerJoinAction(line)
 				WriteToLogFile("/var/log/serversentinel/playerjoined.log", matches[2])
 			},
 		},
@@ -54,6 +48,7 @@ func GetTriggers(selectedTriggers []string) []console.Trigger {
 				return strings.Contains(line, "lost connection: Disconnected")
 			},
 			Action: func(line string) {
+				playerDisconnectedRegex := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (.+) lost connection: Disconnected`)
 				matches := playerDisconnectedRegex.FindStringSubmatch(line)
 				if len(matches) < 3 {
 					fmt.Println("ERROR WHILE EXTRACTING DISCONNECTED PLAYER NAME")

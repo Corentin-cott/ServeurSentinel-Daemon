@@ -8,46 +8,23 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 
 	"github.com/Corentin-cott/ServeurSentinel/config"
-	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 )
 
 // WriteToLogFile writes a line to a log file
-func WriteToLogFile(logPath, line string) error {
+func WriteToLogFile(logPath string, line string) error {
 	// Open the log file
 	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("erreur d'ouverture du fichier log : %v", err)
+		return fmt.Errorf("ERROR WHILE OPENING LOG FILE: %v", err)
 	}
 	defer file.Close()
 
 	// Write the line to the log file
 	_, err = file.WriteString(line + "\n")
 	if err != nil {
-		return fmt.Errorf("erreur d'écriture dans le fichier log : %v", err)
-	}
-	return nil
-}
-
-// PlayerJoinAction logs the player's connection
-func PlayerJoinAction(line string) error {
-	// Extract the player's name from the line
-	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
-	matches := re.FindStringSubmatch(line)
-	if len(matches) < 3 {
-		return fmt.Errorf("ERRROR WHILE EXTRACTING CONNECTION INFO")
-	}
-
-	playerName := matches[2] // Get the player's name from the regex match
-
-	serverID := 1 // Temporary server ID, will be replaced by the real server ID later
-
-	// Save the connection log to the database
-	err := db.SaveConnectionLog(playerName, serverID)
-	if err != nil {
-		return fmt.Errorf("ERROR WHILE SAVING CONNECTION LOG: %v", err)
+		return fmt.Errorf("ERROR WHILE WRITING TO LOG FILE: %v", err)
 	}
 	return nil
 }
@@ -61,13 +38,10 @@ func SendToDiscord(message string) error {
 	// Checks if one of the parameters is missing
 	switch {
 	case botToken == "" && channelID == "":
-		fmt.Println("Bot token and channel ID not set. Skipping Discord message.")
 		return fmt.Errorf("ERROR: BOT TOKEN AND CHANNEL ID NOT SET")
 	case botToken == "":
-		fmt.Println("Bot token not set. Skipping Discord message.")
 		return fmt.Errorf("ERROR: BOT TOKEN NOT SET")
 	case channelID == "":
-		fmt.Println("Channel ID not set. Skipping Discord message.")
 		return fmt.Errorf("ERROR: CHANNEL ID NOT SET")
 	}
 
@@ -108,4 +82,10 @@ func SendToDiscord(message string) error {
 	} else {
 		return nil
 	}
+}
+
+// SendToServer sends a message to a server
+func SendToServer(serverID int, serverGame string, message string) error {
+	// Not implemented yet
+	return fmt.Errorf("ERROR: NOT IMPLEMENTED YET")
 }
