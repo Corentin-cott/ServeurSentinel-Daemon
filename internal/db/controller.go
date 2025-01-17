@@ -164,6 +164,38 @@ func GetPlayerAccountIdByPlayerName(playerName string, jeu string) (string, erro
 	}
 }
 
+// Getter to get the server by the server ID
+func GetServerById(serverID int) (string, error) {
+	query := "SELECT nom FROM serveurs WHERE id = ?"
+	var serverName string
+
+	err := db.QueryRow(query, serverID).Scan(&serverName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("SERVER NOT FOUND FOR ID: %d", serverID)
+		}
+		return "", fmt.Errorf("FAILED TO GET SERVER: %v", err)
+	}
+
+	return serverName, nil
+}
+
+// Getter to get the server name by the server ID
+func GetServerNameByID(serverID int) (string, error) {
+	query := "SELECT nom FROM serveurs WHERE id = ?"
+	var serverName string
+
+	err := db.QueryRow(query, serverID).Scan(&serverName)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", fmt.Errorf("SERVER NOT FOUND FOR ID: %d", serverID)
+		}
+		return "", fmt.Errorf("FAILED TO GET SERVER NAME: %v", err)
+	}
+
+	return serverName, nil
+}
+
 // Getter to get the server game by the server ID
 func GetServerGameById(serverID int) (string, error) {
 	query := "SELECT jeu FROM serveurs WHERE id = ?"

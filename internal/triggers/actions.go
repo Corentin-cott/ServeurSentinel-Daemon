@@ -31,6 +31,11 @@ func WriteToLogFile(logPath, line string) error {
 
 // Envoi un message à un serveur Discord
 func SendToDiscord(message string) {
+	if !config.AppConfig.EnableBot {
+		fmt.Println("Bot messages are disabled. Skipping Discord message.")
+		return
+	}
+
 	botToken := config.AppConfig.Bot.BotToken
 	channelID := config.AppConfig.Bot.DiscordChannelID
 
@@ -84,6 +89,11 @@ func SendToDiscord(message string) {
 }
 
 func PlayerJoinAction(line string) {
+	if !config.AppConfig.EnableDatabase {
+		fmt.Println("Database insertions are disabled. Skipping player join log.")
+		return
+	}
+
 	// Extraire les informations du joueur
 	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
 	matches := re.FindStringSubmatch(line)
