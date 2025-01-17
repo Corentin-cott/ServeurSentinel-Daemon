@@ -8,23 +8,23 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 
 	"github.com/Corentin-cott/ServeurSentinel/config"
-	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 )
 
-// Écrit une ligne dans un fichier log
-func WriteToLogFile(logPath, line string) error {
+// WriteToLogFile writes a line to a log file
+func WriteToLogFile(logPath string, line string) error {
+	// Open the log file
 	file, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("erreur d'ouverture du fichier log : %v", err)
+		return fmt.Errorf("ERROR WHILE OPENING LOG FILE: %v", err)
 	}
 	defer file.Close()
 
+	// Write the line to the log file
 	_, err = file.WriteString(line + "\n")
 	if err != nil {
-		return fmt.Errorf("erreur d'écriture dans le fichier log : %v", err)
+		return fmt.Errorf("ERROR WHILE WRITING TO LOG FILE: %v", err)
 	}
 	return nil
 }
@@ -39,52 +39,52 @@ func SendToDiscord(message string) {
 	botToken := config.AppConfig.Bot.BotToken
 	channelID := config.AppConfig.Bot.DiscordChannelID
 
+	// Checks if one of the parameters is missing
 	switch {
 	case botToken == "" && channelID == "":
-		fmt.Println("Bot token and channel ID not set. Skipping Discord message.")
-		return
+		return fmt.Errorf("ERROR: BOT TOKEN AND CHANNEL ID NOT SET")
 	case botToken == "":
-		fmt.Println("Bot token not set. Skipping Discord message.")
-		return
+		return fmt.Errorf("ERROR: BOT TOKEN NOT SET")
 	case channelID == "":
-		fmt.Println("Channel ID not set. Skipping Discord message.")
-		return
+		return fmt.Errorf("ERROR: CHANNEL ID NOT SET")
 	}
 
+	// Prepare the request to the Discord API
 	apiURL := fmt.Sprintf("https://discord.com/api/v10/channels/%s/messages", channelID)
-
 	type DiscordBotMessage struct {
 		Content string `json:"content"`
 	}
 
+	// Serialize the message to JSON
 	payload := DiscordBotMessage{Content: message}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		fmt.Printf("Erreur lors de la sérialisation du message Discord : %v\n", err)
-		return
+		return fmt.Errorf("ERROR WHILE SERIALISING DISCORD MESSAGE: %v", err)
 	}
 
+	// Create the HTTP request to send the message
 	req, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(payloadBytes))
 	if err != nil {
-		fmt.Printf("Erreur lors de la création de la requête : %v\n", err)
-		return
+		return fmt.Errorf("ERROR WHILE CREATING REQUEST TO DISCORD: %v", err)
 	}
 
+	// Set the headers for the request
 	req.Header.Set("Authorization", "Bot "+botToken)
 	req.Header.Set("Content-Type", "application/json")
 
+	// Finally, send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("Erreur lors de l'envoi à Discord : %v\n", err)
-		return
+		return fmt.Errorf("ERROR WHILE SENDING MESSAGE TO DISCORD: %v", err)
 	}
 	defer resp.Body.Close()
 
+	// Check the response status
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		fmt.Printf("Erreur lors de l'envoi à Discord : Status %d\n", resp.StatusCode)
+		return fmt.Errorf("ERROR WHILE SENDING MESSAGE TO DISCORD, RESPONSE STATUS: %v", resp.Status)
 	} else {
-		fmt.Println("Message envoyé à Discord avec succès.")
+		return nil
 	}
 }
 
@@ -112,4 +112,10 @@ func PlayerJoinAction(line string) {
 	if err != nil {
 		fmt.Printf("Erreur lors de l'enregistrement du log de connexion : %v\n", err)
 	}
+}
+
+// SendToServer sends a message to a server
+func SendToServer(serverID int, serverGame string, message string) error {
+	// Not implemented yet
+	return fmt.Errorf("ERROR: NOT IMPLEMENTED YET")
 }

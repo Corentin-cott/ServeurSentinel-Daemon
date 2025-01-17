@@ -90,7 +90,7 @@ func main() {
 	}
 
 	// Create a list of triggers and create a wait group
-	triggersList := triggers.GetTriggers()
+	triggersList := triggers.GetTriggers([]string{"PlayerJoinedMinecraftServer", "PlayerDisconnectedMinecraftServer"})
 	processLogFiles(logDirPath, triggersList)
 
 	fmt.Println("Server Sentinel daemon stopped.")
