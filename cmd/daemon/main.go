@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"sync"
 
@@ -14,7 +15,55 @@ import (
 
 func main() {
 
-	fmt.Println("Starting the Server Sentinel daemon...")
+	// Commands handler, check if any arguments are passed
+	var correctUsage = "correct usage: serversentinel <command> [arguments]"
+	if len(os.Args) < 2 {
+		fmt.Println("Starting the Server Sentinel daemon...")
+	} else if len(os.Args) == 2 || len(os.Args) > 3 {
+		fmt.Println("Invalid number of arguments, " + correctUsage)
+		os.Exit(1)
+	} else {
+		fmt.Println("Valid number of arguments")
+
+		// // Check if the second argument is an integer
+		// var serverID int
+		// if len(os.Args) > 1 {
+		// 	var err error
+		// 	serverID, err = strconv.Atoi(os.Args[2]) // Convert the third argument to an integer
+		// 	if err != nil {
+		// 		fmt.Println("Invalid server ID, " + correctUsage)
+		// 		os.Exit(1)
+		// 	}
+		// }
+
+		// // Command handler
+		// command := os.Args[1]
+		// switch command {
+		// case "start-minecraft":
+		// 	if len(os.Args) < 3 {
+		// 		fmt.Println("Missing server ID, " + correctUsage)
+		// 		os.Exit(1)
+		// 	}
+
+		// 	fmt.Println("Now starting the Minecraft server " + os.Args[2])
+		// 	err := commands.StartMinecraftServer(serverID)
+		// 	if err != nil {
+		// 		fmt.Println("The Minecraft server could not be started: " + err.Error())
+		// 	}
+		// case "stop-minecraft":
+		// 	if len(os.Args) < 3 {
+		// 		fmt.Println("Missing server ID, " + correctUsage)
+		// 		os.Exit(1)
+		// 	}
+
+		// 	fmt.Println("Not implemented yet")
+		// default:
+		// 	fmt.Println("Unknown command, " + correctUsage)
+		// 	os.Exit(1)
+		// }
+
+		os.Exit(1)
+	}
 
 	// Load the configuration file
 	err := config.LoadConfig("/opt/serversentinel/config.json")
@@ -28,7 +77,7 @@ func main() {
 		log.Fatalf("FATAL ERROR TESTING DATABASE CONNECTION: %v", err)
 	}
 
-	// Get the list of all the log files
+	// Log files handler, here get all log files in the directory
 	logDirPath := "/opt/serversentinel/serverslog/" // Folder containing the log files
 	logFiles, err := filepath.Glob(filepath.Join(logDirPath, "*.log"))
 	if err != nil {

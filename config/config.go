@@ -23,9 +23,11 @@ type BotConfig struct {
 
 // Config is a struct that contains every configuration needed for ServeurSentinel
 type Config struct {
-	Bot     BotConfig      `json:"bot"`
-	DB      DatabaseConfig `json:"db"`
-	LogPath string         `json:"logPath"`
+	Bot            BotConfig      `json:"bot"`
+	DB             DatabaseConfig `json:"db"`
+	LogPath        string         `json:"logPath"`
+	EnableBot      bool           `json:"enableBot"`
+	EnableDatabase bool           `json:"enableDatabase"`
 }
 
 var AppConfig Config

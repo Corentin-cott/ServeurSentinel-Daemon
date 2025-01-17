@@ -29,9 +29,13 @@ func WriteToLogFile(logPath string, line string) error {
 	return nil
 }
 
-// SendToDiscord sends a message to a Discord channel
-func SendToDiscord(message string) error {
-	// Get parameters from the configuration
+// Envoi un message à un serveur Discord
+func SendToDiscord(message string) {
+	if !config.AppConfig.EnableBot {
+		fmt.Println("Bot messages are disabled. Skipping Discord message.")
+		return
+	}
+
 	botToken := config.AppConfig.Bot.BotToken
 	channelID := config.AppConfig.Bot.DiscordChannelID
 
@@ -81,6 +85,32 @@ func SendToDiscord(message string) error {
 		return fmt.Errorf("ERROR WHILE SENDING MESSAGE TO DISCORD, RESPONSE STATUS: %v", resp.Status)
 	} else {
 		return nil
+	}
+}
+
+func PlayerJoinAction(line string) {
+	if !config.AppConfig.EnableDatabase {
+		fmt.Println("Database insertions are disabled. Skipping player join log.")
+		return
+	}
+
+	// Extraire les informations du joueur
+	re := regexp.MustCompile(`\[(\d{2}:\d{2}:\d{2})\] \[Server thread/INFO\]: (\w+) joined the game`)
+	matches := re.FindStringSubmatch(line)
+	if len(matches) < 3 {
+		fmt.Println("Erreur lors de l'extraction des informations de connexion")
+		return
+	}
+
+	playerName := matches[2] // Le UUID du joueur est le deuxième groupe
+
+	// Utilisez la nouvelle fonction pour vérifier et enregistrer le joueur
+	serverID := 1 // Vous pouvez utiliser l'ID de votre serveur ici
+
+	// Enregistrer la connexion
+	err := db.SaveConnectionLog(playerName, serverID)
+	if err != nil {
+		fmt.Printf("Erreur lors de l'enregistrement du log de connexion : %v\n", err)
 	}
 }
 
