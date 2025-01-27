@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/Corentin-cott/ServeurSentinel/config"
+	"github.com/Corentin-cott/ServeurSentinel/internal/db"
 )
 
 // WriteToLogFile writes a line to a log file
@@ -30,10 +32,10 @@ func WriteToLogFile(logPath string, line string) error {
 }
 
 // Envoi un message à un serveur Discord
-func SendToDiscord(message string) {
+func SendToDiscord(message string) error {
 	if !config.AppConfig.EnableBot {
 		fmt.Println("Bot messages are disabled. Skipping Discord message.")
-		return
+		return nil
 	}
 
 	botToken := config.AppConfig.Bot.BotToken
